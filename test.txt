@@ -11,7 +11,7 @@ Page({
 
   },
   /**
-   * 页面的初始数据
+   * 这是一个页面的初始化
    */
   data: {
     info: [],
@@ -113,7 +113,7 @@ Page({
                 // 填入分享页面的 options.openid-----被看人的openID
                 _visitedopenid: "oUHPI5XHbMgY_ubJJMmiy7-rlAVs",
                 visitTime: visitTime,
-                visiterName: "张先森",
+                visiterName: "张小姐",
                 visiterphoto: "",
               }
             }).then(res => {
@@ -140,7 +140,7 @@ Page({
         //   })
         // })
         .catch(res => {
-          console.log("访问表查询出错")
+          console.log("查询访问表出错")
         })
       }
     })
