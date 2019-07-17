@@ -1,4 +1,8 @@
 // miniprogram/pages/cxx3/cxx3.js
+
+//modify here
+
+
 var util = require('../utils/util.js'); //时间包
 const app = getApp();
 var i = 0;
@@ -11,7 +15,7 @@ Page({
 
   },
   /**
-   * 这是一个页面的初始化
+   * 页面初始化
    */
   data: {
     info: [],
