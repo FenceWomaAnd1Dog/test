@@ -1,7 +1,7 @@
 // miniprogram/pages/cxx3/cxx3.js
 
-//modify here
-
+//modify two
+//modify three
 
 var util = require('../utils/util.js'); //Ê±¼ä°ü
 const app = getApp();
