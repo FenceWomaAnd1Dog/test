@@ -1,5 +1,8 @@
 // miniprogram/pages/cxx3/cxx3.js
 //modify one
+
+//到底还是可以上传到GitHub
+
 var util = require('../utils/util.js'); //时间包
 const app = getApp();
 var i = 0;
