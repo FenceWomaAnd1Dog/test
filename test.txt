@@ -1,0 +1,221 @@
+// miniprogram/pages/cxx3/cxx3.js
+var util = require('../utils/util.js'); //时间包
+const app = getApp();
+var i = 0;
+var options =null;
+var collectedName = "";
+var collectedImg="";
+Page({
+
+  onReady: function() {
+
+  },
+  /**
+   * 页面的初始数据
+   */
+  data: {
+    info: [],
+    _openid: "",
+    state: false,
+    cardstyle: app.globalData.cardstyle,
+  },
+  /**
+   * 生命周期函数--监听页面加载
+   */
+  onLoad: function(options) {
+    this.data.options = options;
+    // 拿到本人openid
+    wx.cloud.callFunction({
+      name: 'login',
+      data: {},
+      success: res => {
+        app.globalData.openid = res.result.openid
+        this.popularAddOne(options);        
+      }
+    })
+    //当前名片样式赋值
+    this.setData({
+      cardstyle: app.globalData.cardstyle
+    })
+  },
+
+  //打开页面人气加一
+  popularAddOne: function(options) {
+    var that = this
+    //获得当前时间----全局数
+    var visitTime;
+    visitTime = util.formatTime(new Date());
+    //跳转去别人分享的页面
+    const db = wx.cloud.database()
+    //信息回显
+    db.collection('userCard').where({
+      _openid: "oUHPI5XHbMgY_ubJJMmiy7-rlAVs" // 填入分享页面的 options.openid
+    }).get({
+      success: function(res) {
+        if (res.data.length != 0) {
+          // this.selectCollect();
+          that.setData({
+            info: res.data[0],
+            // collects: res.data[0].collects,
+            collectedName:res.data[0].username,
+            collectedImg:res.data[0].headimage,
+          })
+        }
+        //人气加一功能
+        wx.cloud.callFunction({
+          // 要调用的云函数名称
+          name: 'popularAddOne',
+          // 传递给云函数的event参数
+          data: {
+            _openid: "oUHPI5XHbMgY_ubJJMmiy7-rlAVs", // 填入分享页面的 openid
+          }
+        }).then(res => {
+          console.log("分享者人气+1成功,访问者的信息已写入数据库");
+        }).catch(res => {
+          console.log("人气加一失败")
+        })
+
+        //查询访问表
+        db.collection('visited').where({
+          // 填入分享页面的 options.openid----- 被看人的openID
+          _visitedopenid: "oUHPI5XHbMgY_ubJJMmiy7-rlAVs",
+          _openid: app.globalData.openid //当前用户的openID---主动看的人的openID
+        }).get().then(res => {
+          //该用户访问过
+          if (res.data.length != 0) {
+            console.log("当前用户的openID=" + app.globalData.openid);
+            console.log("该用户之前预览过该名片")
+            wx.cloud.callFunction({
+              // 要调用的云函数名称
+              name: 'visitedUpdate',
+              // 传递给云函数的event参数
+              data: {
+                // 填入分享页面的 options.openid----分享者的openID
+                _visitedopenid: "oUHPI5XHbMgY_ubJJMmiy7-rlAVs",
+                visitTime: visitTime,
+                visiterName: "张先森",
+                visiterphoto: "",
+              }
+            }).then(res => {
+              console.log("该用户之前预览过该名片，该用户访问时间更新成功");
+            }).catch(res => {
+              console.log("访问表新添数据失败")
+            })
+          }
+          //该用户没有访问过
+          else {
+            console.log("当前用户的openID" + app.globalData.openid);
+            wx.cloud.callFunction({
+              // 要调用的云函数名称
+              name: 'visitedAddOne',
+              // 传递给云函数的event参数
+              data: {
+                // 填入分享页面的 options.openid-----被看人的openID
+                _visitedopenid: "oUHPI5XHbMgY_ubJJMmiy7-rlAVs",
+                visitTime: visitTime,
+                visiterName: "张先森",
+                visiterphoto: "",
+              }
+            }).then(res => {
+              console.log("访问表新添数据成功");
+            }).catch(res => {
+              console.log("访问表新添数据失败")
+            })
+          }
+        })
+        // .then(res=>{
+        //   const database = wx.cloud.database()
+        //   //收藏查询
+        //   database.collection('collections').where({
+        //     openid: app.globalData.openid,
+        //     // 填入分享页面的 options.openid
+        //     collectionOpenid: "oUHPI5XHbMgY_ubJJMmiy7-rlAVs"
+        //   }).get()(res => {
+        //     if (res.data.length >= 0) {
+        //       that.setData({
+        //         state: true
+        //       })
+        //       console.log("用户收藏过该名片")
+        //     }
+        //   })
+        // })
+        .catch(res => {
+          console.log("访问表查询出错")
+        })
+      }
+    })
+  },
+
+  selectCollect:function(){
+          const database = wx.cloud.database()
+          //收藏查询
+          database.collection('collections').where({
+            openid: app.globalData.openid,
+            // 填入分享页面的 options.openid
+            collectionOpenid: "oUHPI5XHbMgY_ubJJMmiy7-rlAVs"
+          }).get()(res => {
+            if (res.data.length >= 0) {
+              that.setData({
+                state: true
+              })
+              console.log("用户收藏过该名片")
+            }
+          })
+  },
+
+  //收藏名片
+  collect: function() {
+    var that = this
+    //获得当前时间----全局数
+    var collectionTime;
+    collectionTime = util.formatTime(new Date());
+    this.setData({
+      state: true
+    })
+    wx.cloud.callFunction({
+      // 要调用的云函数名称
+      name: 'collectCard',
+      // 传递给云函数的event参数
+      data: {
+        // 填入分享页面的 options.openid-----被看人的openID
+        collectOpenId: "oUHPI5XHbMgY_ubJJMmiy7-rlAVs",
+        collectedName: that.data.collectedName,
+        collectedImg: that.data.collectedImg,
+        collectionTime: collectionTime
+      }
+    }).then(res => {
+      console.log("该用户收藏卡片数据成功");
+    }).catch(res => {
+      console.log("收藏卡片数据失败")
+    })
+  },
+
+  //取消收藏名片
+  collected: function() {
+    //取消收藏
+    this.setData({
+      state: false
+    })
+    //调用云函数取消收藏
+    wx.cloud.callFunction({
+      // 要调用的云函数名称
+      name: 'cancelCollection',
+      // 传递给云函数的event参数
+      data: {
+        // 主动看的人取消收藏
+        collects: this.data.collects,
+      }
+    }).then(res => {
+      console.log("该用户取消收藏卡片数据成功");
+    }).catch(res => {
+      console.log("取消收藏卡片数据失败")
+    })
+  },
+  /**
+   * 生命周期函数--监听页面显示
+   */
+  onShow: function() {
+
+  },
+
+})
